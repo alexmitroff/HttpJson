@@ -2,10 +2,9 @@ import json
 from http.server import *
 
 
-class CustomHTTPRequstHandler(BaseHTTPRequestHandler):
+class CustomHTTPRequestHandler(BaseHTTPRequestHandler):
 
-    def do_GET(self):
-        data = {
+    JSON_DATA = {
             'students': [
                 {
                     'id': 1,
@@ -34,15 +33,21 @@ class CustomHTTPRequstHandler(BaseHTTPRequestHandler):
             ]
         }
 
-        serialized_json = json.dumps(data)
-
+    def return_json(self):
+        serialized_json = json.dumps(self.JSON_DATA)
         self.send_response(200)
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
         self.wfile.write(serialized_json.encode('utf-8'))
 
+    def do_GET(self):
+        self.return_json()
 
-def run(server_class=HTTPServer, handler_class=CustomHTTPRequstHandler):
+    def do_POST(self):
+        self.return_json()
+
+
+def run(server_class=HTTPServer, handler_class=CustomHTTPRequestHandler):
     server_address = ('localhost', 8000)
     httpd = server_class(server_address, handler_class)
     httpd.serve_forever()

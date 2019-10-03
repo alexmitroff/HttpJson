@@ -7,28 +7,26 @@ class CustomHTTPRequestHandler(BaseHTTPRequestHandler):
     JSON_DATA = {
             'students': [
                 {
-                    'id': 1,
-                    'fullname': 'Имя Фамилия',
+                    'id': 3,
+                    'fullname': u'Имя Фамилия',
                     'rank': 'генерал вся руси',
-                    'role': 'teacher',
                     'group': '7'
                 },
                 {
                     'id': 1,
                     'fullname': 'John Doe',
                     'rank': 'генерал',
-                    'role': 'student',
                     'group': '7'
                 },
             ],
             'groups': [
                 {
                     'id': 7,
-                    'fullname': 'Первая учебная'
+                    'name': 'Первая учебная'
                 },
                 {
                     'id': 8,
-                    'fullname': 'Вторая полевая'
+                    'name': 'Вторая полевая'
                 },
             ]
         }

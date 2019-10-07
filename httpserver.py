@@ -7,38 +7,10 @@ import time
 import tty
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import parse_qs
-from .settings import SERVER_ADDRESS, SERVER_PORT, CLIENT_ADDRESS, CLIENT_PORT, JSON_FILE_PATH
+from settings import *
 
 
 class CustomHTTPRequestHandler(BaseHTTPRequestHandler):
-
-    JSON_DATA = {
-            'students': [
-                {
-                    'id': 3,
-                    'fullname': u'Имя Фамилия',
-                    'rank': 'генерал вся руси',
-                    'group': '7'
-                },
-                {
-                    'id': 1,
-                    'fullname': 'John Doe',
-                    'rank': 'генерал',
-                    'group': '7'
-                },
-            ],
-            'groups': [
-                {
-                    'id': 7,
-                    'name': 'Первая учебная'
-                },
-                {
-                    'id': 8,
-                    'name': 'Вторая полевая'
-                },
-            ]
-        }
-
     @staticmethod
     def get_json_string(path):
         try:
@@ -48,7 +20,6 @@ class CustomHTTPRequestHandler(BaseHTTPRequestHandler):
             return '{"exception": "%s"}' % e
 
     def return_json(self):
-        # serialized_json = json.dumps(self.JSON_DATA, ensure_ascii=False)
         serialized_json = self.get_json_string(JSON_FILE_PATH)
         print(serialized_json)
         self.send_response(200)
@@ -89,29 +60,32 @@ def getch():
 
 
 def listen_keys():
+    print(f'Press <{SEND_DATAGRAM_KEY}> to send UDP datagram to {CLIENT_ADDRESS}:{CLIENT_PORT}')
+    print(f'Press <{STOP_KEYLISTENING_KEY}> to stop listen keyboard')
     button_delay = 0.2
 
     while True:
         char = getch()
 
-        if (char == "p"):
-            print("Stop!")
+        if (char == STOP_KEYLISTENING_KEY):
+            print("Key listening was stopped.")
+            print("Now you can press <Ctrl+c> to stop script.")
             exit(0)
 
-        if (char == "q"):
+        if (char == SEND_DATAGRAM_KEY):
             time.sleep(button_delay)
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             sock.connect((CLIENT_ADDRESS, CLIENT_PORT))
-            print("UPD socket connected")
+            print("UPD socket was connected")
             sock.send(b'ok')
             print("UPD package was send")
             sock.close()
-            print("UPD socket closed")
+            print("UPD socket was disconnected")
 
 
 if __name__ == '__main__':
-    # run()
     server_thread = threading.Thread(target=run)
     server_thread.start()
+    print(f'Python server started on {SERVER_ADDRESS}:{SERVER_PORT}')
     keyboard_thread = threading.Thread(target=listen_keys)
     keyboard_thread.start()

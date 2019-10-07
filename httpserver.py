@@ -1,10 +1,13 @@
 import json
-from http.server import *
-from http.client import *
-from urllib.parse import parse_qs
 import socket
+import sys
+import termios
 import threading
-import sys, termios, tty, os, time
+import time
+import tty
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from urllib.parse import parse_qs
+from .settings import SERVER_ADDRESS, SERVER_PORT, CLIENT_ADDRESS, CLIENT_PORT, JSON_FILE_PATH
 
 
 class CustomHTTPRequestHandler(BaseHTTPRequestHandler):
@@ -36,8 +39,17 @@ class CustomHTTPRequestHandler(BaseHTTPRequestHandler):
             ]
         }
 
+    @staticmethod
+    def get_json_string(path):
+        try:
+            with open(path, 'r') as json_file:
+                return json_file.read()
+        except Exception as e:
+            return '{"exception": "%s"}' % e
+
     def return_json(self):
-        serialized_json = json.dumps(self.JSON_DATA, ensure_ascii=False)
+        # serialized_json = json.dumps(self.JSON_DATA, ensure_ascii=False)
+        serialized_json = self.get_json_string(JSON_FILE_PATH)
         print(serialized_json)
         self.send_response(200)
         self.send_header('Content-Type', 'application/json')
@@ -48,12 +60,6 @@ class CustomHTTPRequestHandler(BaseHTTPRequestHandler):
         self.return_json()
 
     def do_POST(self):
-        # ctype, pdict = cgi.parse_header(self.headers.get('content-type'))
-        # if ctype == 'multipart/form-data':
-        #     postvars = cgi.parse_multipart(self.rfile, pdict)
-        #     print(postvars)
-        #     self.send_response(200)
-
         length = self.headers['content-length']
         data = self.rfile.read(int(length)).decode('utf-8')
         fields = parse_qs(data)
@@ -65,14 +71,9 @@ class CustomHTTPRequestHandler(BaseHTTPRequestHandler):
 
 
 def run(server_class=HTTPServer, handler_class=CustomHTTPRequestHandler):
-    server_address = ('192.168.0.104', 8000)
+    server_address = (SERVER_ADDRESS, SERVER_PORT)
     httpd = server_class(server_address, handler_class)
     httpd.serve_forever()
-
-
-def send_request():
-    connection = HTTPConnection('https://192.168.1.1')
-    connection.request("GET", '/')
 
 
 def getch():
@@ -99,10 +100,8 @@ def listen_keys():
 
         if (char == "q"):
             time.sleep(button_delay)
-            UDP_HOST = '192.168.0.102'
-            UDP_PORT = 6625
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            sock.connect((UDP_HOST, UDP_PORT))
+            sock.connect((CLIENT_ADDRESS, CLIENT_PORT))
             print("UPD socket connected")
             sock.send(b'ok')
             print("UPD package was send")
@@ -111,9 +110,8 @@ def listen_keys():
 
 
 if __name__ == '__main__':
-    # keyboard.add_hotkey('ctrl+shift+a', print, args=('triggered', 'hotkey'))
-    serverthread = threading.Thread(target=run)
-    serverthread.start()
     # run()
-    keyboardthread = threading.Thread(target=listen_keys)
-    keyboardthread.start()
+    server_thread = threading.Thread(target=run)
+    server_thread.start()
+    keyboard_thread = threading.Thread(target=listen_keys)
+    keyboard_thread.start()

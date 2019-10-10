@@ -1,10 +1,8 @@
 import json
 import socket
 import sys
-import termios
 import threading
 import time
-import tty
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import parse_qs
 from settings import *
@@ -46,17 +44,24 @@ def run(server_class=HTTPServer, handler_class=CustomHTTPRequestHandler):
     httpd = server_class(server_address, handler_class)
     httpd.serve_forever()
 
+try:
+    import termios
+    import tty
+    def getch():
 
-def getch():
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    try:
-        tty.setraw(sys.stdin.fileno())
-        ch = sys.stdin.read(1)
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
 
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-    return ch
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+except:
+        import msvcrt
+        def getch():
+            return msvcrt.getch().decode("utf-8")
 
 
 def listen_keys():
